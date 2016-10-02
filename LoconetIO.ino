@@ -93,11 +93,11 @@ void loop() {
       Serial.println("--------------------------------");
       Serial.print("\nUlik: ");
       Serial.println(innportPins[i]);
-      int adr = (i / 4) + JMRI_ADR;
+      int adr = i + JMRI_ADR;
       Serial.print("Adresse:");
       Serial.println(adr);
 
-      LN_STATUS lnstat = LocoNet.reportSensor(i + JMRI_ADR, innportState[i]);
+      LN_STATUS lnstat = LocoNet.reportSensor(adr, innportState[i]);
       Serial.print("ReportSensorLoconetStatus: ");
       Serial.println(lnstat);
 
@@ -136,7 +136,7 @@ void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) 
 
   //Sensor forespørsel fra JMRI, rapporter status på innganger.
   //Hvilken av forespørslene (1017-1020) vi egentlig skal svare på er avhengig av hvilken adresse vi har
-  //men jeg orker ikke prøve å finne ut av det nå så vi svarer på 1018.
+  //men jeg orker ikke prøve å finne ut av hvordan dettte egentlig er ment å fungrere nå, så vi svarer på 1018.
   if (!Output && !Direction && Address == 1018) {
     for (int i = 0; i < sizeof(innportPins); i++) {
       LN_STATUS lnstat = LocoNet.reportSensor(i + JMRI_ADR, innportState[i]);
