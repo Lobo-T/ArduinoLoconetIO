@@ -1,7 +1,9 @@
 #include <LocoNet.h>
 
-#define LNtxPin 7
+//#define DEBUG
 
+//Locoshield transmit pin.
+#define LNtxPin 7
 //Startadresse.  JMRI Hardware Address. Verdi mellom 1 og 2048.  Unngå 1017 - 1020.
 #define JMRI_ADR 1
 
@@ -46,8 +48,10 @@ boolean innportStateLast[sizeof(innportPins)];
 
 
 void setup() {
+  #ifdef DEBUG
   Serial.begin(57600);
-
+  #endif
+  
   //Sett pinmode
   for (byte i = 0; i < sizeof(innportPins); i++) {
     pinMode(innportPins[i], INPUT_PULLUP);
@@ -65,13 +69,16 @@ void setup() {
   // initialize the LocoNet interface
   LocoNet.init(LNtxPin);
 
+  #ifdef DEBUG
   Serial.print(F("Setup end RAM:"));
   Serial.println(freeRam());
+  #endif
 }
 
 
 void loop() {
   if (lnMsg *LnPacket = LocoNet.receive()) {
+    #ifdef DEBUG
     Serial.print(F("From lnet: "));
     Serial.print(F("OPCode: "));
     Serial.print(LnPacket->sz.command);
@@ -79,6 +86,7 @@ void loop() {
     Serial.print(LnPacket->data[1]);
     Serial.print(F(" Data2: "));
     Serial.println(LnPacket->data[2]);
+    #endif
 
     //Vi vil få en callback til en av notify-funksjonene under hvis dette er en pakke av Switch eller Sensor type.
     LocoNet.processSwitchSensorMessage(LnPacket);
@@ -90,18 +98,22 @@ void loop() {
 
     //Hvis endret send OPC_INPUT_REP
     if (innportState[i] != innportStateLast[i]) {
+      int adr = i + JMRI_ADR;
+      #ifdef DEBUG
       Serial.println("--------------------------------");
       Serial.print("\nUlik: ");
       Serial.println(innportPins[i]);
-      int adr = i + JMRI_ADR;
       Serial.print("Adresse:");
       Serial.println(adr);
+      #endif
 
       LN_STATUS lnstat = LocoNet.reportSensor(adr, innportState[i]);
+      #ifdef DEBUG
       Serial.print("ReportSensorLoconetStatus: ");
       Serial.println(lnstat);
-
       Serial.println("--------------------------------");
+      #endif
+
     }
   }
 
@@ -112,14 +124,17 @@ void loop() {
 
 //Callbacks fra processSwitchSensorMessage
 void notifySensor( uint16_t Address, uint8_t State ) {
+  #ifdef DEBUG
   Serial.println("notifySensor");
   Serial.print("Adr: ");
   Serial.print(Address);
   Serial.print(" State: ");
   Serial.println(State);
+  #endif
 }
 
 void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) {
+  #ifdef DEBUG
   Serial.println("notifySwitchRequest");
   Serial.print("Adr: ");
   Serial.print(Address);
@@ -127,10 +142,13 @@ void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) 
   Serial.print(Output);
   Serial.print(" Direction: ");
   Serial.println(Direction);
+  #endif
 
   //Sett utgang hvis dette er en av våre aresser
   if (Output && (Address >= JMRI_ADR && Address < JMRI_ADR + sizeof(utportPins))) {
+    #ifdef DEBUG
     Serial.println("---Set output---");
+    #endif
     digitalWrite(utportPins[Address - JMRI_ADR], Direction);
   }
 
@@ -140,26 +158,32 @@ void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) 
   if (!Output && !Direction && Address == 1018) {
     for (int i = 0; i < sizeof(innportPins); i++) {
       LN_STATUS lnstat = LocoNet.reportSensor(i + JMRI_ADR, innportState[i]);
+      #ifdef DEBUG
       Serial.print("ReportSensorLoconetStatus: ");
       Serial.println(lnstat);
+      #endif
     }
   }
 }
 
 void notifySwitchReport( uint16_t Address, uint8_t Output, uint8_t Direction ) {
+  #ifdef DEBUG
   Serial.println("notifySwitchReport");
   Serial.print("Adr: ");
   Serial.print(Address);
   Serial.print(" Outp: ");
   Serial.println(Direction);
+  #endif
 }
 
 void notifySwitchState( uint16_t Address, uint8_t Output, uint8_t Direction ) {
+  #ifdef DEBUG
   Serial.println("notifySwtichState");
   Serial.print("Adr: ");
   Serial.print(Address);
   Serial.print(" Outp: ");
   Serial.println(Direction);
+  #endif
 }
 
 int freeRam () {
