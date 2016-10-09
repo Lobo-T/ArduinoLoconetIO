@@ -1,6 +1,9 @@
 #include <LocoNet.h>
+#include <Wire.h>
 
-//#define DEBUG
+#define ARRAYELEMENTCOUNT(x) (sizeof (x) / sizeof (x)[0])
+
+#define DEBUG
 
 //Locoshield transmit pin. (Receive pin må alltid være 8 (ICP1) på UNO, og 48 (ICP5) på MEGA).
 #define LNtxPin 7
@@ -11,65 +14,122 @@
 //og LS1 til LS8 på inngangene.
 #define JMRI_ADR 1
 
-//Setter navn på pinnenummre.
-#define ut0 3
-#define ut1 4
-#define ut2 5
-#define ut3 6
-#define inn0 9
-#define inn1 10
-#define inn2 11
-#define inn3 12
-#define inn4 A0
-#define inn5 A1
-#define inn6 A2
-#define inn7 A3
+//Addressene til i2c kretsene
+#define mcp1_adr B0100000
+#define mcp2_adr B0100001
+#define mcp3_adr B0100010
+#define mcp4_adr B0100100
+#define mcp5_adr B0100101
+#define mcp6_adr B0100110
+#define pcf1_adr B0111000
+#define pcf2_adr B0111001
+#define pcf3_adr B0111010
 
+//Legg til alle io expander kretser som skal brukes i denne arrayen.
+//Posisjon 0 er i2c adressen, Posisjon 1 vil bli brukt til data, 2 til retningstatus, 3 til pullupstatus
+//og 4 angir om porten har blitt skrevet til og med sendes til kretsen.
+byte ioExpanderStatus[][5]={ 
+  {mcp4_adr,0,0,0,0},
+  {mcp5_adr,0,0,0,0},
+  {mcp6_adr,0,0,0,0}  
+};
+
+//MCP23008
+#define GP0 0
+#define GP1 1
+#define GP2 2
+#define GP3 3
+#define GP4 4
+#define GP5 5
+#define GP6 6
+#define GP7 7
+#define MCP_IODIR   0
+#define MCP_IPOL    1
+#define MCP_GPINTEN 2
+#define MCP_DEFVAL  3
+#define MCP_INTCON  4
+#define MCP_IOCON   5
+#define MCP_GPPU    6
+#define MCP_INTF    7
+#define MCP_INTCAP  8
+#define MCP_GPIO    9
+#define MCP_OLAT    10
+
+//Pinnetyper
+#define INTERN_PIN    1
+#define MCP23008_PIN  2
+#define PCF8574_PIN   3
 
 //De pinnene som er i denne arrayen vil bli satt som innganger
-byte innportPins[] = {
-  inn0,
-  inn1,
-  inn2,
-  inn3,
-  inn4,
-  inn5,
-  inn6,
-  inn7
+byte innportPins[][3] = {  
+  {INTERN_PIN,6,0},
+  {INTERN_PIN,9,0},
+  {INTERN_PIN,10,0},
+  {INTERN_PIN,11,0},
+  {INTERN_PIN,12,0},
+  {MCP23008_PIN,GP0,mcp4_adr},
+  {MCP23008_PIN,GP1,mcp4_adr},
+  {MCP23008_PIN,GP2,mcp4_adr},
+  {MCP23008_PIN,GP3,mcp4_adr},
+  {MCP23008_PIN,GP4,mcp4_adr},
+  {MCP23008_PIN,GP5,mcp4_adr},
+  {MCP23008_PIN,GP6,mcp4_adr},
+  {MCP23008_PIN,GP7,mcp4_adr},
+  {MCP23008_PIN,GP0,mcp6_adr},
+  {MCP23008_PIN,GP1,mcp6_adr},
+  {MCP23008_PIN,GP2,mcp6_adr},
+  {MCP23008_PIN,GP3,mcp6_adr},
+  {MCP23008_PIN,GP4,mcp6_adr},
+  {MCP23008_PIN,GP5,mcp6_adr},
+  {MCP23008_PIN,GP6,mcp6_adr},
+  {MCP23008_PIN,GP7,mcp6_adr}
 };
 
 //De pinnene som er i denne arrayen vil bli satt som utganger
-byte utportPins[] = {
-  ut0,
-  ut1,
-  ut2,
-  ut3
+byte utportPins[][3] = {
+  {INTERN_PIN,2,0},
+  {INTERN_PIN,3,0},
+  {INTERN_PIN,4,0},
+  {INTERN_PIN,5,0},
+  {MCP23008_PIN,GP0,mcp5_adr},
+  {MCP23008_PIN,GP1,mcp5_adr},
+  {MCP23008_PIN,GP2,mcp5_adr},
+  {MCP23008_PIN,GP3,mcp5_adr},
+  {MCP23008_PIN,GP4,mcp5_adr},
+  {MCP23008_PIN,GP5,mcp5_adr},
+  {MCP23008_PIN,GP6,mcp5_adr},
+  {MCP23008_PIN,GP7,mcp5_adr}
 };
 
-boolean innportState[sizeof(innportPins)];
-boolean innportStateLast[sizeof(innportPins)];
+boolean innportState[ARRAYELEMENTCOUNT(innportPins)];
+boolean innportStateLast[ARRAYELEMENTCOUNT(innportPins)];
 
 
 void setup() {
   #ifdef DEBUG
   Serial.begin(57600);
   #endif
+  Wire.begin();
   
   //Sett pinmode
-  for (byte i = 0; i < sizeof(innportPins); i++) {
-    pinMode(innportPins[i], INPUT_PULLUP);
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
+    pinDir(innportPins[i], INPUT_PULLUP);
   }
-  for (byte i = 0; i < sizeof(utportPins); i++) {
-    pinMode(utportPins[i], OUTPUT);
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(utportPins); i++) {
+    pinDir(utportPins[i], OUTPUT);
   }
-  //Over blir alle pinnene i innportPins satt til input med innebyggde pullupmotstander slått på.
-  //Hvis du har behov for at noen av dem ikke har pullup så bare redefiner dem det gjelder som INPUT under her.
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
+    setup_mcp(ioExpanderStatus[i][0],ioExpanderStatus[i][2],ioExpanderStatus[i][3]);
+  }
 
   //Vi leser pinnene og oppdaterer innportStateLast før vi starter hovedprogrammet.
-  for (byte i = 0; i < sizeof(innportPins); i++) {
-    innportState[i] = digitalRead(innportPins[i]);
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
+    ioExpanderStatus[i][1]=mcp_read_port(ioExpanderStatus[i][0]);
   }
-  memcpy(innportStateLast, innportState, sizeof(innportState));
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
+    innportState[i] = pinGet(innportPins[i]);
+  }
+  memcpy(innportStateLast, innportState, ARRAYELEMENTCOUNT(innportState));
 
   // initialize the LocoNet interface
   LocoNet.init(LNtxPin);
@@ -98,16 +158,19 @@ void loop() {
   }
 
   //Les pinner sjekk om de er endret fra sist gang vi leste
-  for (byte i = 0; i < sizeof(innportPins); i++) {
-    innportState[i] = digitalRead(innportPins[i]);
-
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
+    ioExpanderStatus[i][1]=mcp_read_port(ioExpanderStatus[i][0]);
+  }
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
+    innportState[i] = pinGet(innportPins[i]);
+    //Serial.print(innportState[i]);
     //Hvis endret send OPC_INPUT_REP
     if (innportState[i] != innportStateLast[i]) {
       int adr = i + JMRI_ADR;
       #ifdef DEBUG
       Serial.println("--------------------------------");
       Serial.print("\nUlik: ");
-      Serial.println(innportPins[i]);
+      Serial.println(innportPins[i][1]);
       Serial.print("Adresse:");
       Serial.println(adr);
       #endif
@@ -121,9 +184,11 @@ void loop() {
 
     }
   }
+  //Serial.println();
 
   //Kopier det vi leste nå til det vi skal sammenligne med neste gang.
-  memcpy(innportStateLast, innportState, sizeof(innportState));
+  memcpy(innportStateLast, innportState, ARRAYELEMENTCOUNT(innportState));
+  writeOutports();
 }  //loop() slutt
 
 
@@ -150,18 +215,18 @@ void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) 
   #endif
 
   //Sett utgang hvis dette er en av våre aresser
-  if (Output && (Address >= JMRI_ADR && Address < JMRI_ADR + sizeof(utportPins))) {
+  if (Output && (Address >= JMRI_ADR && Address < JMRI_ADR + ARRAYELEMENTCOUNT(utportPins))) {
     #ifdef DEBUG
     Serial.println("---Set output---");
     #endif
-    digitalWrite(utportPins[Address - JMRI_ADR], Direction);
+    pinSet(utportPins[Address - JMRI_ADR], Direction);    
   }
 
   //Sensor forespørsel fra JMRI, rapporter status på innganger.
   //Hvilken av forespørslene (1017-1020) vi egentlig skal svare på er avhengig av hvilken adresse vi har
   //men jeg orker ikke prøve å finne ut av hvordan dettte egentlig er ment å fungere nå, så vi svarer på 1018.
   if (!Output && !Direction && Address == 1018) {
-    for (int i = 0; i < sizeof(innportPins); i++) {
+    for (int i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
       LN_STATUS lnstat = LocoNet.reportSensor(i + JMRI_ADR, innportState[i]);
       #ifdef DEBUG
       Serial.print("ReportSensorLoconetStatus: ");
