@@ -91,6 +91,7 @@ byte utportPins[][3] = {
   {INTERN_PIN,3,0},
   {INTERN_PIN,4,0},
   {INTERN_PIN,5,0},
+  {INTERN_PIN,13,0},
   {MCP23008_PIN,GP0,MCP5_ADR},
   {MCP23008_PIN,GP1,MCP5_ADR},
   {MCP23008_PIN,GP2,MCP5_ADR},
@@ -129,7 +130,7 @@ void setup() {
   for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
     innportState[i] = pinGet(innportPins[i]);
   }
-  memcpy(innportStateLast, innportState, ARRAYELEMENTCOUNT(innportState));
+  memcpy(innportStateLast, innportState, sizeof(innportState));
 
   // initialize the LocoNet interface
   LocoNet.init(LNtxPin);
@@ -190,7 +191,7 @@ void loop() {
   //Serial.println();
 
   //Kopier det vi leste nå til det vi skal sammenligne med neste gang.
-  memcpy(innportStateLast, innportState, ARRAYELEMENTCOUNT(innportState));
+  memcpy(innportStateLast, innportState, sizeof(innportState));
   writeOutports();
 }  //loop() slutt
 
