@@ -15,23 +15,23 @@
 #define JMRI_ADR 1
 
 //Addressene til i2c kretsene
-#define mcp1_adr B0100000
-#define mcp2_adr B0100001
-#define mcp3_adr B0100010
-#define mcp4_adr B0100100
-#define mcp5_adr B0100101
-#define mcp6_adr B0100110
-#define pcf1_adr B0111000
-#define pcf2_adr B0111001
-#define pcf3_adr B0111010
+#define MCP1_ADR B0100000
+#define MCP2_ADR B0100001
+#define MCP3_ADR B0100010
+#define MCP4_ADR B0100100
+#define MCP5_ADR B0100101
+#define MCP6_ADR B0100110
+#define PCF1_ADR B0111000
+#define PCF2_ADR B0111001
+#define PCF3_ADR B0111010
 
 //Legg til alle io expander kretser som skal brukes i denne arrayen.
 //Posisjon 0 er i2c adressen, Posisjon 1 vil bli brukt til data, 2 til retningstatus, 3 til pullupstatus
-//og 4 angir om porten har blitt skrevet til og med sendes til kretsen.
+//og 4 angir om porten har blitt skrevet til og må sendes til kretsen.
 byte ioExpanderStatus[][5]={ 
-  {mcp4_adr,0,0,0,0},
-  {mcp5_adr,0,0,0,0},
-  {mcp6_adr,0,0,0,0}  
+  {MCP4_ADR,0,0,0,0},
+  {MCP5_ADR,0,0,0,0},
+  {MCP6_ADR,0,0,0,0}  
 };
 
 //MCP23008
@@ -67,22 +67,22 @@ byte innportPins[][3] = {
   {INTERN_PIN,10,0},
   {INTERN_PIN,11,0},
   {INTERN_PIN,12,0},
-  {MCP23008_PIN,GP0,mcp4_adr},
-  {MCP23008_PIN,GP1,mcp4_adr},
-  {MCP23008_PIN,GP2,mcp4_adr},
-  {MCP23008_PIN,GP3,mcp4_adr},
-  {MCP23008_PIN,GP4,mcp4_adr},
-  {MCP23008_PIN,GP5,mcp4_adr},
-  {MCP23008_PIN,GP6,mcp4_adr},
-  {MCP23008_PIN,GP7,mcp4_adr},
-  {MCP23008_PIN,GP0,mcp6_adr},
-  {MCP23008_PIN,GP1,mcp6_adr},
-  {MCP23008_PIN,GP2,mcp6_adr},
-  {MCP23008_PIN,GP3,mcp6_adr},
-  {MCP23008_PIN,GP4,mcp6_adr},
-  {MCP23008_PIN,GP5,mcp6_adr},
-  {MCP23008_PIN,GP6,mcp6_adr},
-  {MCP23008_PIN,GP7,mcp6_adr}
+  {MCP23008_PIN,GP0,MCP4_ADR},
+  {MCP23008_PIN,GP1,MCP4_ADR},
+  {MCP23008_PIN,GP2,MCP4_ADR},
+  {MCP23008_PIN,GP3,MCP4_ADR},
+  {MCP23008_PIN,GP4,MCP4_ADR},
+  {MCP23008_PIN,GP5,MCP4_ADR},
+  {MCP23008_PIN,GP6,MCP4_ADR},
+  {MCP23008_PIN,GP7,MCP4_ADR},
+  {MCP23008_PIN,GP0,MCP6_ADR},
+  {MCP23008_PIN,GP1,MCP6_ADR},
+  {MCP23008_PIN,GP2,MCP6_ADR},
+  {MCP23008_PIN,GP3,MCP6_ADR},
+  {MCP23008_PIN,GP4,MCP6_ADR},
+  {MCP23008_PIN,GP5,MCP6_ADR},
+  {MCP23008_PIN,GP6,MCP6_ADR},
+  {MCP23008_PIN,GP7,MCP6_ADR}
 };
 
 //De pinnene som er i denne arrayen vil bli satt som utganger
@@ -91,14 +91,14 @@ byte utportPins[][3] = {
   {INTERN_PIN,3,0},
   {INTERN_PIN,4,0},
   {INTERN_PIN,5,0},
-  {MCP23008_PIN,GP0,mcp5_adr},
-  {MCP23008_PIN,GP1,mcp5_adr},
-  {MCP23008_PIN,GP2,mcp5_adr},
-  {MCP23008_PIN,GP3,mcp5_adr},
-  {MCP23008_PIN,GP4,mcp5_adr},
-  {MCP23008_PIN,GP5,mcp5_adr},
-  {MCP23008_PIN,GP6,mcp5_adr},
-  {MCP23008_PIN,GP7,mcp5_adr}
+  {MCP23008_PIN,GP0,MCP5_ADR},
+  {MCP23008_PIN,GP1,MCP5_ADR},
+  {MCP23008_PIN,GP2,MCP5_ADR},
+  {MCP23008_PIN,GP3,MCP5_ADR},
+  {MCP23008_PIN,GP4,MCP5_ADR},
+  {MCP23008_PIN,GP5,MCP5_ADR},
+  {MCP23008_PIN,GP6,MCP5_ADR},
+  {MCP23008_PIN,GP7,MCP5_ADR}
 };
 
 boolean innportState[ARRAYELEMENTCOUNT(innportPins)];
@@ -168,18 +168,18 @@ void loop() {
     if (innportState[i] != innportStateLast[i]) {
       int adr = i + JMRI_ADR;
       #ifdef DEBUG
-      Serial.println("--------------------------------");
-      Serial.print("\nUlik: ");
+      Serial.println(F("--------------------------------"));
+      Serial.print(F("\nUlik: "));
       Serial.println(innportPins[i][1]);
-      Serial.print("Adresse:");
+      Serial.print(F("Adresse:"));
       Serial.println(adr);
       #endif
 
       LN_STATUS lnstat = LocoNet.reportSensor(adr, innportState[i]);
       #ifdef DEBUG
-      Serial.print("ReportSensorLoconetStatus: ");
+      Serial.print(F("ReportSensorLoconetStatus: "));
       Serial.println(lnstat);
-      Serial.println("--------------------------------");
+      Serial.println(F("--------------------------------"));
       #endif
 
     }
@@ -195,29 +195,29 @@ void loop() {
 //Callbacks fra processSwitchSensorMessage
 void notifySensor( uint16_t Address, uint8_t State ) {
   #ifdef DEBUG
-  Serial.println("notifySensor");
-  Serial.print("Adr: ");
+  Serial.println(F("notifySensor"));
+  Serial.print(F("Adr: "));
   Serial.print(Address);
-  Serial.print(" State: ");
+  Serial.print(F(" State: "));
   Serial.println(State);
   #endif
 }
 
 void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) {
   #ifdef DEBUG
-  Serial.println("notifySwitchRequest");
-  Serial.print("Adr: ");
+  Serial.println(F("notifySwitchRequest"));
+  Serial.print(F("Adr: "));
   Serial.print(Address);
-  Serial.print(" Output: ");
+  Serial.print(F(" Output: "));
   Serial.print(Output);
-  Serial.print(" Direction: ");
+  Serial.print(F(" Direction: "));
   Serial.println(Direction);
   #endif
 
   //Sett utgang hvis dette er en av våre aresser
   if (Output && (Address >= JMRI_ADR && Address < JMRI_ADR + ARRAYELEMENTCOUNT(utportPins))) {
     #ifdef DEBUG
-    Serial.println("---Set output---");
+    Serial.println(F("---Set output---"));
     #endif
     pinSet(utportPins[Address - JMRI_ADR], Direction);    
   }
@@ -229,7 +229,7 @@ void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) 
     for (int i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
       LN_STATUS lnstat = LocoNet.reportSensor(i + JMRI_ADR, innportState[i]);
       #ifdef DEBUG
-      Serial.print("ReportSensorLoconetStatus: ");
+      Serial.print(F("ReportSensorLoconetStatus: "));
       Serial.println(lnstat);
       #endif
     }
@@ -238,20 +238,20 @@ void notifySwitchRequest( uint16_t Address, uint8_t Output, uint8_t Direction ) 
 
 void notifySwitchReport( uint16_t Address, uint8_t Output, uint8_t Direction ) {
   #ifdef DEBUG
-  Serial.println("notifySwitchReport");
-  Serial.print("Adr: ");
+  Serial.println(F("notifySwitchReport"));
+  Serial.print(F("Adr: "));
   Serial.print(Address);
-  Serial.print(" Outp: ");
+  Serial.print(F(" Outp: "));
   Serial.println(Direction);
   #endif
 }
 
 void notifySwitchState( uint16_t Address, uint8_t Output, uint8_t Direction ) {
   #ifdef DEBUG
-  Serial.println("notifySwtichState");
-  Serial.print("Adr: ");
+  Serial.println(F("notifySwtichState"));
+  Serial.print(F("Adr: "));
   Serial.print(Address);
-  Serial.print(" Outp: ");
+  Serial.print(F(" Outp: "));
   Serial.println(Direction);
   #endif
 }

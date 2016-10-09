@@ -33,7 +33,7 @@ void mcp_write_single_reg(byte adr,byte reg,byte data){
   Wire.write(data);
   byte success = Wire.endTransmission();
   if(success != 0){
-    Serial.print("I2c transmit error:");
+    Serial.print(F("I2c transmit error:"));
     Serial.println(success);
   }
 }
@@ -51,10 +51,10 @@ byte mcp_read_single_reg(byte adr,byte reg){
     return Wire.read();
   }
   if(success1 !=0 || success2 !=0){
-    Serial.println("mcp_read_single_reg");
-    Serial.print("I2c transmit error:");
+    Serial.println(F("mcp_read_single_reg"));
+    Serial.print(F("I2c transmit error:"));
     Serial.println(success1);
-    Serial.print("I2c receive error:");
+    Serial.print(F("I2c receive error:"));
     Serial.println(success2);
     return -1;
   }
@@ -76,7 +76,7 @@ void setup_pcf(byte adr){
   Wire.write(0xff);  //Sett alle høy for å bruke som innganger
   byte success=Wire.endTransmission(); 
   if(success != 0){
-    Serial.print("I2c PCF transmit error:");
+    Serial.print(F("I2c PCF transmit error:"));
     Serial.println(success);
   }
 }
@@ -87,7 +87,7 @@ byte pcf_read_port(byte adr){
     return Wire.read();
   }
   if(success != 0){
-    Serial.print("I2c PCF receive error:");
+    Serial.print(F("I2c PCF receive error:"));
     Serial.println(success);
   }
 }
@@ -145,9 +145,9 @@ void pinSet(byte pin[],byte state){
 void writeOutports(){
    for(byte i=0;i<ARRAYELEMENTCOUNT(ioExpanderStatus);i++){
       if(ioExpanderStatus[i][4]){  //Har blitt endret.
-        Serial.print("Write:");
+        Serial.print(F("Write:"));
         Serial.print(ioExpanderStatus[i][0]);
-        Serial.print("-");
+        Serial.print(F("-"));
         Serial.println(ioExpanderStatus[i][1]);
         mcp_write_port(ioExpanderStatus[i][0],ioExpanderStatus[i][1]);
         ioExpanderStatus[i][4]=false;
