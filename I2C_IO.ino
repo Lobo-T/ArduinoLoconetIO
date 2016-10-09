@@ -145,10 +145,6 @@ void pinSet(byte pin[],byte state){
 void writeOutports(){
    for(byte i=0;i<ARRAYELEMENTCOUNT(ioExpanderStatus);i++){
       if(ioExpanderStatus[i][4]){  //Har blitt endret.
-        Serial.print(F("Write:"));
-        Serial.print(ioExpanderStatus[i][0]);
-        Serial.print(F("-"));
-        Serial.println(ioExpanderStatus[i][1]);
         mcp_write_port(ioExpanderStatus[i][0],ioExpanderStatus[i][1]);
         ioExpanderStatus[i][4]=false;
       }

@@ -142,6 +142,12 @@ void setup() {
 
 
 void loop() {
+  //Les først inn tilstand på eksterne IO kretser
+  for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
+    ioExpanderStatus[i][1]=mcp_read_port(ioExpanderStatus[i][0]);
+  }
+
+  //Sjekk om vi har fått en Loconetpakke
   if (lnMsg *LnPacket = LocoNet.receive()) {
     #ifdef DEBUG
     Serial.print(F("From lnet: "));
@@ -157,10 +163,7 @@ void loop() {
     LocoNet.processSwitchSensorMessage(LnPacket);
   }
 
-  //Les pinner sjekk om de er endret fra sist gang vi leste
-  for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
-    ioExpanderStatus[i][1]=mcp_read_port(ioExpanderStatus[i][0]);
-  }
+  //Sjekk om innganger er endret fra sist gang vi leste
   for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
     innportState[i] = pinGet(innportPins[i]);
     //Serial.print(innportState[i]);
