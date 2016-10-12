@@ -167,7 +167,7 @@ void loop() {
   //Sjekk om innganger er endret fra sist gang vi leste
   for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
     innportState[i] = pinGet(innportPins[i]);
-    //Serial.print(innportState[i]);
+
     //Hvis endret send OPC_INPUT_REP
     if (innportState[i] != innportStateLast[i]) {
       int adr = i + JMRI_ADR;
@@ -185,13 +185,13 @@ void loop() {
       Serial.println(lnstat);
       Serial.println(F("--------------------------------"));
       #endif
-
     }
   }
-  //Serial.println();
 
   //Kopier det vi leste nå til det vi skal sammenligne med neste gang.
   memcpy(innportStateLast, innportState, sizeof(innportState));
+  
+  //Skriv data til eksterne io porter hvis vi har endret dem
   writeOutports();
 }  //loop() slutt
 

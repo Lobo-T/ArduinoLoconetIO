@@ -26,7 +26,7 @@
 #define MCP_OLAT    10
 
 
-
+//Skriv til valgfritt register i MCP23008
 void mcp_write_single_reg(byte adr,byte reg,byte data){
   Wire.beginTransmission(adr);
   Wire.write(reg);
@@ -38,10 +38,12 @@ void mcp_write_single_reg(byte adr,byte reg,byte data){
   }
 }
 
+//Skriv til utgangslatchen på MCP23008
 void mcp_write_port(byte adr,byte data){
   mcp_write_single_reg(adr,MCP_GPIO,data);
 }
 
+//Les valgfritt register i MCP23008
 byte mcp_read_single_reg(byte adr,byte reg){
   Wire.beginTransmission(adr);
   Wire.write(reg);
@@ -60,10 +62,12 @@ byte mcp_read_single_reg(byte adr,byte reg){
   }
 }
 
+//Les pinnestatus på MCP23008
 byte mcp_read_port(byte adr){
   return mcp_read_single_reg(adr,MCP_GPIO);
 }
 
+//setter retning og pullups på IO pinner på MCP23008
 void setup_mcp(byte adr,byte dir,byte pullup){
   //Sett retning
   mcp_write_single_reg(adr,MCP_IODIR,dir);
@@ -92,13 +96,9 @@ byte pcf_read_port(byte adr){
   }
 }
 
+
+//Erstatning for pinMode()
 void pinDir(byte pin[],byte mode){
-  /*Serial.print("Type: ");
-  Serial.println(pin[0]);
-  Serial.print("Pin: ");
-  Serial.println(pin[1]);
-  Serial.print("adr: ");
-  Serial.println(pin[2]); */
   if(pin[0] == INTERN_PIN){
     pinMode(pin[1],mode);
   } else if(pin[0] == MCP23008_PIN){
@@ -113,6 +113,7 @@ void pinDir(byte pin[],byte mode){
   }
 }
 
+//Erstatning for digitalRead()
 boolean pinGet(byte pin[]){
   if(pin[0] == INTERN_PIN){
     return digitalRead(pin[1]);
@@ -125,6 +126,7 @@ boolean pinGet(byte pin[]){
   }
 }
 
+//Erstatning for digitalWrite()
 void pinSet(byte pin[],byte state){
   if(pin[0] == INTERN_PIN){
     return digitalWrite(pin[1],state);
