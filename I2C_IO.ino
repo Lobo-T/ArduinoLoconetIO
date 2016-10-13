@@ -98,15 +98,15 @@ byte pcf_read_port(byte adr){
 
 
 //Erstatning for pinMode()
-void pinDir(byte pin[],byte mode){
-  if(pin[0] == INTERN_PIN){
-    pinMode(pin[1],mode);
-  } else if(pin[0] == MCP23008_PIN){
+void pinDir(pin_t pin,byte mode){
+  if(pin.pintype == INTERN_PIN){
+    pinMode(pin.pinno,mode);
+  } else if(pin.pintype == MCP23008_PIN){
     for(byte i=0;i<ARRAYELEMENTCOUNT(ioExpanderStatus);i++){
-      if(ioExpanderStatus[i][0] == pin[2] && (mode==INPUT || mode==INPUT_PULLUP)){
-        ioExpanderStatus[i][2] = ioExpanderStatus[i][2] | 1<<pin[1];
+      if(ioExpanderStatus[i].adr == pin.adr && (mode==INPUT || mode==INPUT_PULLUP)){
+        ioExpanderStatus[i].dir = ioExpanderStatus[i].dir | 1<<pin.pinno;
         if(mode==INPUT_PULLUP){
-          ioExpanderStatus[i][3]=ioExpanderStatus[i][3] | 1<<pin[1];
+          ioExpanderStatus[i].pullup=ioExpanderStatus[i].pullup | 1<<pin.pinno;
         }
       }
     }
@@ -114,41 +114,42 @@ void pinDir(byte pin[],byte mode){
 }
 
 //Erstatning for digitalRead()
-boolean pinGet(byte pin[]){
-  if(pin[0] == INTERN_PIN){
-    return digitalRead(pin[1]);
-  } else if(pin[0] == MCP23008_PIN){
+boolean pinGet(pin_t pin){
+  if(pin.pintype == INTERN_PIN){
+    return digitalRead(pin.pinno);
+  } else if(pin.pintype == MCP23008_PIN){
     for(byte i=0;i<ARRAYELEMENTCOUNT(ioExpanderStatus);i++){
-      if(ioExpanderStatus[i][0] == pin[2]){
-        return ioExpanderStatus[i][1] & 1<<pin[1];
+      if(ioExpanderStatus[i].adr == pin.adr){
+        return ioExpanderStatus[i].data & 1<<pin.pinno;
       }
     }    
   }
 }
 
 //Erstatning for digitalWrite()
-void pinSet(byte pin[],byte state){
-  if(pin[0] == INTERN_PIN){
-    return digitalWrite(pin[1],state);
-  } else if(pin[0] == MCP23008_PIN){
+void pinSet(pin_t pin,byte state){
+  if(pin.pintype == INTERN_PIN){
+    return digitalWrite(pin.pinno,state);
+  } else if(pin.pintype == MCP23008_PIN){
     for(byte i=0;i<ARRAYELEMENTCOUNT(ioExpanderStatus);i++){
-      if(ioExpanderStatus[i][0] == pin[2]){
+      if(ioExpanderStatus[i].adr == pin.adr){
         if(state){
-          ioExpanderStatus[i][1] = ioExpanderStatus[i][1] | 1<<pin[1];
+          ioExpanderStatus[i].data = ioExpanderStatus[i].data | 1<<pin.pinno;
         }else{
-          ioExpanderStatus[i][1] = ioExpanderStatus[i][1] & ~(1<<pin[1]);        
+          ioExpanderStatus[i].data = ioExpanderStatus[i].data & ~(1<<pin.pinno);        
         }
-        ioExpanderStatus[i][4]=true;  //Tag for at data må overføres til MCP krets.
+        ioExpanderStatus[i].changed=true;  //Tag for at data må overføres til MCP krets.
       }
     }    
   }
 }
 
+//Skriv data til IO expander krets.
 void writeOutports(){
    for(byte i=0;i<ARRAYELEMENTCOUNT(ioExpanderStatus);i++){
-      if(ioExpanderStatus[i][4]){  //Har blitt endret.
-        mcp_write_port(ioExpanderStatus[i][0],ioExpanderStatus[i][1]);
-        ioExpanderStatus[i][4]=false;
+      if(ioExpanderStatus[i].changed){  //Har blitt endret.
+        mcp_write_port(ioExpanderStatus[i].adr,ioExpanderStatus[i].data);
+        ioExpanderStatus[i].changed=false;
       }
    }
 }

@@ -25,13 +25,25 @@
 #define PCF2_ADR B0111001
 #define PCF3_ADR B0111010
 
+struct ioExpanderStat_t{
+  byte adr;           //i2c adresse
+  byte type;          //Kretstype
+  byte data;          //Data
+  byte dir;           //Bitmask for retning 1 in, 0 ut.
+  byte pullup;        //1 pullup slått på 0 pullup slått av for de kretsene som støtter det.
+  boolean changed;    //true betyr at data er endret og må sendes til kretsen
+};
+
+#define IC_MCP23008  2
+#define IC_PCF8574   3
+
 //Legg til alle io expander kretser som skal brukes i denne arrayen.
-//Posisjon 0 er i2c adressen, Posisjon 1 vil bli brukt til data, 2 til retningstatus, 3 til pullupstatus
-//og 4 angir om porten har blitt skrevet til og må sendes til kretsen.
-byte ioExpanderStatus[][5]={ 
-  {MCP4_ADR,0,0,0,0},
-  {MCP5_ADR,0,0,0,0},
-  {MCP6_ADR,0,0,0,0}  
+//Posisjon .adr er i2c adressen. .type er type krets, enten IC_MCP23008 eller IC_PCF8574
+//Eksempel for en MCP23008 krets:   {.adr = B0100000, .type = IC_MCP23008}
+ioExpanderStat_t ioExpanderStatus[]={
+  {.adr = MCP4_ADR, .type = IC_MCP23008},
+  {.adr = MCP5_ADR, .type = IC_MCP23008},
+  {.adr = MCP6_ADR, .type = IC_MCP23008}
 };
 
 //MCP23008
@@ -60,8 +72,14 @@ byte ioExpanderStatus[][5]={
 #define MCP23008_PIN  2
 #define PCF8574_PIN   3
 
+struct pin_t{
+  byte pintype;
+  byte pinno;
+  byte adr;
+};
+
 //De pinnene som er i denne arrayen vil bli satt som innganger
-byte innportPins[][3] = {  
+pin_t innportPins[] = {  
   {INTERN_PIN,6,0},
   {INTERN_PIN,9,0},
   {INTERN_PIN,10,0},
@@ -86,7 +104,7 @@ byte innportPins[][3] = {
 };
 
 //De pinnene som er i denne arrayen vil bli satt som utganger
-byte utportPins[][3] = {
+pin_t utportPins[] = {
   {INTERN_PIN,2,0},
   {INTERN_PIN,3,0},
   {INTERN_PIN,4,0},
@@ -120,12 +138,12 @@ void setup() {
     pinDir(utportPins[i], OUTPUT);
   }
   for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
-    setup_mcp(ioExpanderStatus[i][0],ioExpanderStatus[i][2],ioExpanderStatus[i][3]);
+    setup_mcp(ioExpanderStatus[i].adr,ioExpanderStatus[i].dir,ioExpanderStatus[i].pullup);
   }
 
   //Vi leser pinnene og oppdaterer innportStateLast før vi starter hovedprogrammet.
   for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
-    ioExpanderStatus[i][1]=mcp_read_port(ioExpanderStatus[i][0]);
+    ioExpanderStatus[i].data=mcp_read_port(ioExpanderStatus[i].adr);
   }
   for (byte i = 0; i < ARRAYELEMENTCOUNT(innportPins); i++) {
     innportState[i] = pinGet(innportPins[i]);
@@ -145,7 +163,7 @@ void setup() {
 void loop() {
   //Les først inn tilstand på eksterne IO kretser
   for (byte i = 0; i < ARRAYELEMENTCOUNT(ioExpanderStatus); i++) {
-    ioExpanderStatus[i][1]=mcp_read_port(ioExpanderStatus[i][0]);
+    ioExpanderStatus[i].data=mcp_read_port(ioExpanderStatus[i].adr);
   }
 
   //Sjekk om vi har fått en Loconetpakke
@@ -174,7 +192,7 @@ void loop() {
       #ifdef DEBUG
       Serial.println(F("--------------------------------"));
       Serial.print(F("\nUlik: "));
-      Serial.println(innportPins[i][1]);
+      Serial.println(innportPins[i].pinno);
       Serial.print(F("Adresse:"));
       Serial.println(adr);
       #endif
