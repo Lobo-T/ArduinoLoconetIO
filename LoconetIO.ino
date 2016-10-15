@@ -25,7 +25,7 @@
 #define PCF2_ADR B0111001
 #define PCF3_ADR B0111010
 
-struct ioExpanderStat_t{
+struct IoExpanderStat_t{
   byte adr;           //i2c adresse
   byte type;          //Kretstype
   byte data;          //Data
@@ -40,7 +40,7 @@ struct ioExpanderStat_t{
 //Legg til alle io expander kretser som skal brukes i denne arrayen.
 //Posisjon .adr er i2c adressen. .type er type krets, enten IC_MCP23008 eller IC_PCF8574
 //Eksempel for en MCP23008 krets:   {.adr = B0100000, .type = IC_MCP23008}
-ioExpanderStat_t ioExpanderStatus[]={
+IoExpanderStat_t ioExpanderStatus[]={
   {.adr = MCP4_ADR, .type = IC_MCP23008},
   {.adr = MCP5_ADR, .type = IC_MCP23008},
   {.adr = MCP6_ADR, .type = IC_MCP23008}
@@ -72,14 +72,14 @@ ioExpanderStat_t ioExpanderStatus[]={
 #define MCP23008_PIN  2
 #define PCF8574_PIN   3
 
-struct pin_t{
-  byte pintype;
-  byte pinno;
-  byte adr;
+struct Pin_t{
+  byte pintype; //IO pinne type
+  byte pinno;   //Pinnenummer på arduino/IOkrets
+  byte adr;     //I2C adresse på IOkretsen
 };
 
 //De pinnene som er i denne arrayen vil bli satt som innganger
-pin_t innportPins[] = {  
+Pin_t innportPins[] = {  
   {INTERN_PIN,6,0},
   {INTERN_PIN,9,0},
   {INTERN_PIN,10,0},
@@ -104,7 +104,7 @@ pin_t innportPins[] = {
 };
 
 //De pinnene som er i denne arrayen vil bli satt som utganger
-pin_t utportPins[] = {
+Pin_t utportPins[] = {
   {INTERN_PIN,2,0},
   {INTERN_PIN,3,0},
   {INTERN_PIN,4,0},

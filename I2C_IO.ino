@@ -98,7 +98,7 @@ byte pcf_read_port(byte adr){
 
 
 //Erstatning for pinMode()
-void pinDir(pin_t pin,byte mode){
+void pinDir(Pin_t pin,byte mode){
   if(pin.pintype == INTERN_PIN){
     pinMode(pin.pinno,mode);
   } else if(pin.pintype == MCP23008_PIN){
@@ -114,7 +114,7 @@ void pinDir(pin_t pin,byte mode){
 }
 
 //Erstatning for digitalRead()
-boolean pinGet(pin_t pin){
+boolean pinGet(Pin_t pin){
   if(pin.pintype == INTERN_PIN){
     return digitalRead(pin.pinno);
   } else if(pin.pintype == MCP23008_PIN){
@@ -127,7 +127,7 @@ boolean pinGet(pin_t pin){
 }
 
 //Erstatning for digitalWrite()
-void pinSet(pin_t pin,byte state){
+void pinSet(Pin_t pin,byte state){
   if(pin.pintype == INTERN_PIN){
     return digitalWrite(pin.pinno,state);
   } else if(pin.pintype == MCP23008_PIN){
